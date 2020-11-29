@@ -6,7 +6,8 @@ class ctrl_socket:
         # Variables
         self.data = ''
         self.exit = 0
-
+        self.exist_new_data = 0
+        self.lock = threading.Lock()
         # class 생성 시 argument로 받는 address(ip, port)
         # bind, listen
         self.recv_Socket = socket.socket()
@@ -21,6 +22,7 @@ class ctrl_socket:
         self.exit = 1
         self.recv_Socket.close()
         self.th_recv_data.join()
+        self.th_return_data.join()
 
     def recv_data(self):
         # data 받고 저장
@@ -33,10 +35,18 @@ class ctrl_socket:
             recver, addr = self.recv_Socket.accept()
             recv_data = recver.recv(400)
 
-            if len(recv_data) == 0:
-                continue
+            if len(recv_data) != 0:
+                with self.lock:
+                    self.exist_new_data = 1
+                    self.data = recv_data
 
-            
+
+    def return_data(self):
+        with self.lock:
+            if self.exist_new_data == 1:
+                return self.data
+            else:
+                return 0
 
     def send_data(self, address, data):
         # send 위한 socket 생성
