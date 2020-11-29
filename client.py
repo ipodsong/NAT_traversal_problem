@@ -17,24 +17,46 @@ clientPort = 10081
 # 1 : request list
 # 2 : send chat
 # 3 : send keep alive
+# 4 : send exit
+# 5 : send res list
+
 def recv_data(c_socket):
     while True:
-        data = c_socket.recv_data()
+        data, addr = c_socket.recv_data()  ## address도 받아야함
         if data != 0:
             pass
 
-def request_list(socket, address):
-    data = utils.make_data(1, '')
+def request_list(socket, address, cid, msg):
+    data = utils.make_data(1, cid)  
     socket.send_data(address, data)
 
-def send_msg(socket, address, msg):
-    socket.send_data(address, msg)
+def send_msg(socket, address, cid, msg):
+    data = utils.make_data(2, [cid, msg])  
+    socket.send_data(address, data)
 
-def send_exit(socket, address):
-    socket.send_data(address, 'exit')
+def send_exit(socket, address, cid, msg):
+    data = utils.make_data(4, cid)   
+    socket.send_data(address, data)    
+    
+def splitcmd(cmd, address):
+    global client_table
+    splited = (cmd+' ').split(' ')
+    mode = splited[0]; CID = splited[1]; msg = splited[-2]
+        
+    if CID in client_table:
+        address = client_table[CID]
+        
+    return mode, address, msg
 
 def client(serverIP, serverPort, clientID):
     # client init
+    global client_table = {} ## dataform : {another clientID : another client_address} ## res_list에서 바꾸면됨
+    
+    cmd2mode = {'@show_list':requst_list, \
+                 '@chat':send_msg, \
+                 '@exit':send_exit
+                }
+    
     server_address = (serverIP, serverPort)
     client_socket = ctrl_socket.ctrl_socket(('', clientPort))
 
@@ -47,8 +69,18 @@ def client(serverIP, serverPort, clientID):
     client_socket.send_data(server_address, data)
 
     while True:
+        
         cmd = input("shell >> ")
-    
+        
+        mode, address, msg = splitcmd(cmd, server_address)
+        
+        if mode not in cmd2mode:
+            pass
+            
+        cmd2mode[mode](client_socket, address, clientID, msg)
+        
+        if mode == '@exit':
+            break
 
 
 """
