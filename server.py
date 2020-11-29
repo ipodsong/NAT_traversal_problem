@@ -25,19 +25,40 @@ def timecheck():
         if termserver:
             return
         
+def recv_data(c_socket):
+    while True:
+        data, addr = c_socket.recv_data()
+        if data != 0:
+            pass
+
 def server():
     """
     Write your code!!!
     """
     global table_lock, termserver
     print('server started...')
+    
+    ## set parameter
     IPTABLE = {}
     table_lock = threading.lock(); termserver = 0
-    timecheck()
+     
+    ## create socket    
     server_socket = ctrl_socket.ctrl_socket(('', serverPort))
     
+    ## start timecheck thread
+    tcheck = threading.Thread(target=timecheck)
+    tcheck.start()
+    
+    ## start receive data thread
+    th_recv_data = threading.Thread(target=recv_data, args=(server_socket))
+    th_recv_data.start()
+   
+    
     while True:
-        
+        cmd = input("")
+        if cmd == 'quit':
+            termserver = 1
+            break
     
 
 
