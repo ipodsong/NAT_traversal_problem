@@ -8,18 +8,22 @@ import utils
 
 
 serverPort = 10080
-def timecheck():
-    global table_lock
+# global variables
+
+def check_timeout():
+    global table_lock, client_table, termserver
     while True:
-        termkey = {}
+        del_key = {}
         table_lock.acquire()
-        for key in IPTABLE:
-            key[1] = key[1] + 1
-            if key[1] > 30:
-                termkey[key] = 1
-        for key in termkey:
-            IPTABLE.del(key)
-            print(key, ' is disconnected')
+        for key in client_table:
+            client_table[key][1] = client_table[key][1] + 1
+            if client_table[key][1] > 30:
+                del_key[key] = 1
+                
+        for key in del_key:
+            client_table.del(key)
+            print(key, ' is disconnected')  ## client connection is dead by 30s timeout
+            
         table_lock.release()
         sleep(1)
         if termserver:
@@ -32,21 +36,19 @@ def recv_data(c_socket):
             pass
 
 def server():
-    """
-    Write your code!!!
-    """
-    global table_lock, termserver
+    ## set global variables
+    global table_lock, termserver, client_table
     print('server started...')
     
-    ## set parameter
-    IPTABLE = {}
+    ## set variables
+    client_table = {} ### dataform : {client_ID : [client_address, time]}
     table_lock = threading.lock(); termserver = 0
      
     ## create socket    
     server_socket = ctrl_socket.ctrl_socket(('', serverPort))
     
-    ## start timecheck thread
-    tcheck = threading.Thread(target=timecheck)
+    ## start check_timeout thread
+    tcheck = threading.Thread(target=check_timeout)
     tcheck.start()
     
     ## start receive data thread
