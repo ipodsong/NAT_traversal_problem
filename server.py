@@ -23,7 +23,7 @@ def check_timeout():
         ## delete key 
         for key in del_key:
             client_table.pop(key)           ## delete key
-            print(key, ' is disconnected')  ## client connection is dead by 30s timeout
+            print(key, 'is disconnected')  ## client connection is dead by 30s timeout
             
         table_lock.release()
         ## time sleep 1s
@@ -67,7 +67,7 @@ def rm_timer(s_socket, address, CID):
     if CID in client_table:
         client_table.pop(CID)
     table_lock.release()
-    print(CID, ' is unregistered')
+    print(CID, 'is unregistered')
 
 # reveive data from client    
 def recv_data(s_socket):
@@ -113,7 +113,7 @@ def server():
     table_lock = threading.Lock(); termserver = 0
      
     ## create socket    
-    server_socket = ctrl_socket.ctrl_socket(('', serverPort))
+    server_socket = ctrl_socket.ctrl_socket(('', serverPort), 'server')
     
     ## start check_timeout thread
     tcheck = threading.Thread(target=check_timeout)

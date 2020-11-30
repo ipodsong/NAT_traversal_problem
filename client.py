@@ -1,8 +1,10 @@
-import sys
 ### library ###
+import sys
+import signal
 import socket
 import threading
 import time
+import re
 ### user library ###
 import ctrl_socket
 import utils
@@ -23,16 +25,19 @@ clientPort = 10081
 ###### thread 함수 ######
 # send keep alive to server
 def send_alive(c_socket, server_address):
-    global cli_term
+    global exit_flag
     data = utils.make_data(3, clientID)
     while True:
         # wait for 10s
-        time.sleep(10)
+        for i in range(10):
+            if exit_flag == 1:
+                break
+            time.sleep(1)
+        if exit_flag == 1:
+            break
         # send client is alive
         c_socket.send_data(server_address, data)
-        if cli_term:
-            # client is terminated
-            return
+    print("send_alive thread terminated")
 
 # receive data    
 def recv_data(c_socket):
@@ -44,15 +49,17 @@ def recv_data(c_socket):
                  5 : print_list  \
                }
     while True:
+        if exit_flag == 1:
+            break
         data, addr = c_socket.return_data() 
         if len(data) == 0:
             continue
-
         # unpack data to mode and message
         mode, msg = utils.unpack_data(data.decode())
         
         # execute function
         mode2cmd[mode](msg)
+    print("recv_data thread terminated")
 ###### thread 함수 ######
 
 ###### print 함수 ######
@@ -60,7 +67,7 @@ def recv_data(c_socket):
 def print_chat(msg):
     # 채팅 메세지 console에 표시
     # ex) From client [msg]
-    print('from ', msg[0], '[{}]'.format(msg[1]))
+    print('from', msg[0], '[{}]'.format(msg[1]))
     
     
 # receive all clinet list from server
@@ -71,7 +78,11 @@ def print_list(msg):
     for key in msg:
         print(key)
         # add client info to client_table
-        client_table[key[0]] = key[1]
+        addr = key[1].replace("(", "")
+        addr = addr.replace(")", "")
+        addr = addr.replace("'", "")
+        addr = addr.split(", ")
+        client_table[key[0]] = (addr[0], int(addr[1]))
 ###### print 함수 ######
         
 ###### send function ######      
@@ -82,12 +93,12 @@ def request_list(socket, address, cid, msg):
 
 # send message to other client
 def send_msg(socket, address, cid, msg):
-    data = utils.make_data(2, [cid, msg])  
+    data = utils.make_data(2, [cid, msg])
     socket.send_data(address, data)
 
 # send exit message to server    
 def send_exit(socket, address, cid, msg):
-    data = utils.make_data(4, cid)   
+    data = utils.make_data(4, cid) 
     socket.send_data(address, data)    
 ###### send function ######
 
@@ -96,8 +107,8 @@ def splitcmd(cmd, address):
     global client_table
     # cmd : '@commend' or '@chat [otherclient] [message]'
     splited = (cmd+' ').split(' ')
-    mode = splited[0]; CID = splited[1]; msg = splited[-2]
-        
+    mode = splited[0]; CID = splited[1]; msg = splited[2:-1]
+    msg = ' '.join(msg)
     if CID in client_table:
         address = client_table[CID]
         
@@ -106,8 +117,8 @@ def splitcmd(cmd, address):
 def client(serverIP, serverPort, clientID):
     # client init
     print("Init client")
-    global client_table, cli_term
-    cli_term = 0
+    global client_table, exit_flag
+    exit_flag = 0
     client_table = {} ## client_table dataform : { clientID : client_address} 
     
     # 함수 dic
@@ -120,7 +131,7 @@ def client(serverIP, serverPort, clientID):
     try:
         print("Make socket...")
         server_address = (serverIP, serverPort)
-        client_socket = ctrl_socket.ctrl_socket(('', clientPort))
+        client_socket = ctrl_socket.ctrl_socket(('', clientPort), 'client')
         print("Make socket completed")
     except:
         print("Make socket failed")
@@ -147,7 +158,8 @@ def client(serverIP, serverPort, clientID):
     print("Init client completed")
     print("Start Shell...")
     while True:
-        cmd = input("shell >> ")
+        cmd = input("")
+        sys.stdout.flush()
         # 입력받은 command parsing
         mode, address, msg = splitcmd(cmd, server_address)
         
@@ -160,9 +172,13 @@ def client(serverIP, serverPort, clientID):
         
         if mode == '@exit':
             # client was terminated
-            cli_term = 1
+            exit_flag = 1
+            del client_socket
+            th_recv_data.join()
+            th_send_alive.join()
             break
-
+    print(clientID, "terminates")
+    sys.exit()
 
 """
 Don't touch the code below!
