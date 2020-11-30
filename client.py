@@ -105,20 +105,29 @@ def client(serverIP, serverPort, clientID):
                 }
     
     #소켓 생성
-    print("Make socket...")
-    server_address = (serverIP, serverPort)
-    client_socket = ctrl_socket.ctrl_socket(('', clientPort))
-    print("Make socket completed")
+    try:
+        print("Make socket...")
+        server_address = (serverIP, serverPort)
+        client_socket = ctrl_socket.ctrl_socket(('', clientPort))
+        print("Make socket completed")
+    except:
+        print("Make socket failed")
+        exit(0)
+
 
     # data 받는 thread 생성
     th_recv_data = threading.Thread(target=recv_data, args=(client_socket, ))
     th_recv_data.start()
 
     # 서버에 CID 전송
-    print("Send CID to server...")
-    data = utils.make_data(0, clientID)
-    client_socket.send_data(server_address, data)
-    print("Send CID to server completed")
+    try:
+        print("Send CID to server...")
+        data = utils.make_data(0, clientID)
+        client_socket.send_data(server_address, data)
+        print("Send CID to server completed")
+    except:
+        print("Send CID to server failed")
+        exit(0)
 
     # sending alive thread 생성
     th_send_alive = threading.Thread(target=send_alive, args=(client_socket, server_address))
