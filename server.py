@@ -3,6 +3,7 @@ from time import sleep
 ### library ###
 import time
 import threading
+### user library ###
 import ctrl_socket
 import utils
 
@@ -28,12 +29,68 @@ def check_timeout():
         sleep(1)
         if termserver:
             return
-        
-def recv_data(c_socket):
+
+def saveCID(s_socket, address, CID):
+    global table_lock, client_table
+    table_lock.acquire()
+    client_table[CID] = [address, 0]
+    table_lock.release()
+    print(CID, address)
+
+def reslist(s_socket, address, CID):
+    global table_lock, client_table
+    table = []
+    table_lock.acquire()
+    for key in client_table:
+        table.append([key,client_table[key][0]])
+    table_lock.release()
+    
+    data = utils. make_data(5, table)
+    s_socket.send_data(address, data)
+    
+def reset_time(s_socket, address, CID):
+    global table_lock, client_table
+    table_lock.acquire()
+    client_table[CID][1] = 0
+    table_lock.release()
+    
+def rm_timer(s_socket, address, CID):
+    global table_lock, client_table
+    table_lock.acquire()
+    if CID in client_table:
+        client_table.del(CID)
+    table_lock.release()
+    print(CID, ' is unregistered')
+    
+def recv_data(s_socket):
+    global termserver
+    # mode
+    # 0 : recv CID
+    # 1 : recv req list
+    # 2 : recv chat
+    # 3 : recv keep alive
+    # 4 : recv exit
+    # 5 : recv res list
+    mode2cmd = { 0 : saveCID, \
+                 1 : reslist, \
+                 3 : reset_time, \
+                 4 : rm_timer \
+               }
+    
     while True:
-        data, addr = c_socket.recv_data()
+        data, addr = s_socket.recv_data()  ## 아마도 이 부분 수정해야할지도
+        
+        if termserver:
+            return        
+        
         if data != 0:
             pass
+        
+        mode, unpacked = utils.unpackdata(data.decode())
+        
+        mode2cmd[mode](s_socket, addr, unpacked)
+        
+        
 
 def server():
     ## set global variables
