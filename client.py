@@ -21,6 +21,19 @@ clientPort = 10081
 # 4 : send exit
 # 5 : send res list
 
+# send keep alive to server
+def send_alive(c_socket, server_address):
+    global cli_term
+    data = utils.make_data(3, clientID)
+    while True:
+        # wait for 10s
+        time.sleep(10)
+        # send client is alive
+        c_socket.send_data(server_address, data)
+        if cli_term:
+            # client is terminated
+            return
+    
 # reveive message from other client
 def recv_chat(msg):
     # 채팅 메세지 console에 표시
@@ -87,7 +100,8 @@ def splitcmd(cmd, address):
 
 def client(serverIP, serverPort, clientID):
     # client init
-    global client_table
+    global client_table, cli_term
+    cli_term = 0
     client_table = {} ## client_table dataform : { clientID : client_address} 
     
     cmd2mode = {'@show_list':requst_list, \
@@ -105,7 +119,11 @@ def client(serverIP, serverPort, clientID):
     # 서버에 CID 전송
     data = utils.make_data(0, clientID)
     client_socket.send_data(server_address, data)
-
+    
+    # sending alive thread 생성
+    th_alive = threading.Thread(target=send_alive, args=(client_socket, server_address))
+    th_alive.start()
+    
     while True:
         
         cmd = input("shell >> ")
@@ -118,6 +136,8 @@ def client(serverIP, serverPort, clientID):
         cmd2mode[mode](client_socket, address, clientID, msg)
         
         if mode == '@exit':
+            # client was terminated
+            cli_term = 1
             break
 
 
