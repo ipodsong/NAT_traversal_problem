@@ -8,60 +8,69 @@ import ctrl_socket
 import utils
 
 
-serverPort = 10080
 # global variables
+serverPort = 10080
 
 def check_timeout():
     global table_lock, client_table, termserver
     while True:
         del_key = {}
         table_lock.acquire()
+        ## run time
         for key in client_table:
             client_table[key][1] = client_table[key][1] + 1
             if client_table[key][1] > 30:
                 del_key[key] = 1
-                
+        ## delete key 
         for key in del_key:
-            client_table.del(key)
+            client_table.pop(key)           ## delete key
             print(key, ' is disconnected')  ## client connection is dead by 30s timeout
             
         table_lock.release()
+        ## time sleep 1s
         sleep(1)
+        ## server is terminated
         if termserver:
             return
 
+# save received Client_ID
 def saveCID(s_socket, address, CID):
     global table_lock, client_table
     table_lock.acquire()
-    client_table[CID] = [address, 0]
+    client_table[CID] = [address, 0]  ## dic[key = client_ID] = [address, time]
     table_lock.release()
     print(CID, address)
 
+# send all client list to client
 def reslist(s_socket, address, CID):
     global table_lock, client_table
+    ## make table to send all client list
     table = []
     table_lock.acquire()
     for key in client_table:
-        table.append([key,client_table[key][0]])
+        table.append([key,client_table[key][0]])  ##append [key, address]
     table_lock.release()
     
     data = utils. make_data(5, table)
     s_socket.send_data(address, data)
-    
+
+# reset timer for Client_ID    
 def reset_time(s_socket, address, CID):
     global table_lock, client_table
     table_lock.acquire()
     client_table[CID][1] = 0
     table_lock.release()
-    
+
+# remove info about Client_ID    
 def rm_timer(s_socket, address, CID):
     global table_lock, client_table
     table_lock.acquire()
     if CID in client_table:
-        client_table.del(CID)
+        client_table.pop(CID)
     table_lock.release()
     print(CID, ' is unregistered')
-    
+
+# reveive data from client    
 def recv_data(s_socket):
     global termserver
     # mode
@@ -71,23 +80,28 @@ def recv_data(s_socket):
     # 3 : recv keep alive
     # 4 : recv exit
     # 5 : recv res list
-    mode2cmd = { 0 : saveCID, \
-                 1 : reslist, \
-                 3 : reset_time, \
-                 4 : rm_timer \
+    # response mode
+    mode2cmd = { 0 : saveCID,    \ # save Client_ID
+                 1 : reslist,    \ # send all Client list
+                 3 : reset_time, \ # reset timer
+                 4 : rm_timer    \ # remove Client info
                }
     
     while True:
         data, addr = s_socket.recv_data()  ## 아마도 이 부분 수정해야할지도
         
+        # if server is terminated
         if termserver:
             return        
         
+        # if data is none
         if data != 0:
             pass
         
+        # unpack data
         mode, unpacked = utils.unpackdata(data.decode())
         
+        # response
         mode2cmd[mode](s_socket, addr, unpacked)
         
         
@@ -116,6 +130,7 @@ def server():
     while True:
         cmd = input("")
         if cmd == 'quit':
+            # server was terminated
             termserver = 1
             break
     
