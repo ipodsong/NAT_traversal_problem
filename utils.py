@@ -92,7 +92,7 @@ def unpack_res_list(data):
     unpack = rmrn(data)
     unpack_list = []
     for i in range(0,len(unpack),2):
-        unpack_list.append([rmcol(unpack[i]), rmcol(unpack[i+1])]
+        unpack_list.append([rmcol(unpack[i]), rmcol(unpack[i+1])])
         
     return unpack_list
 
