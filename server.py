@@ -23,7 +23,7 @@ def check_timeout():
         ## delete key 
         for key in del_key:
             client_table.pop(key)           ## delete key
-            print(key, 'is disconnected')  ## client connection is dead by 30s timeout
+            print(key, 'is disappeared')  ## client connection is dead by 30s timeout
             
         table_lock.release()
         ## time sleep 1s
