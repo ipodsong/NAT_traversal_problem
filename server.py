@@ -88,16 +88,16 @@ def recv_data(s_socket):
                }
     
     while True:
-        data, addr = s_socket.recv_data()  ## 아마도 이 부분 수정해야할지도
+        data = s_socket.recv_data()  ## 아마도 이 부분 수정해야할지도
         
         # if server is terminated
         if termserver:
             return        
         
         # if data is none
-        if data != 0:
-            pass
-        
+        if data == 0:
+            continue
+        data, addr = data
         # unpack data
         mode, unpacked = utils.unpackdata(data.decode())
         
@@ -123,7 +123,7 @@ def server():
     tcheck.start()
     
     ## start receive data thread
-    th_recv_data = threading.Thread(target=recv_data, args=(server_socket))
+    th_recv_data = threading.Thread(target=recv_data, args=(server_socket,))
     th_recv_data.start()
    
     
