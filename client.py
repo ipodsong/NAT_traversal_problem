@@ -20,15 +20,19 @@ clientPort = 10081
 # 4 : send exit
 # 5 : send res list
 
-### recv func ###
+
 def recv_chat(msg):
+    # 채팅 메세지 console에 표시
+    # ex) From client [msg]
     print('from ', msg[0], '[{}]'.format(msg[1]))
     
 def recv_list(msg):
+    # 주석 필요
     global client_table
     client_table = {}
     for key in msg:
         print(key)
+        # 주석 필요
         client_table[key[0]] = key[1]
     
     
@@ -40,9 +44,11 @@ def recv_data(c_socket):
                  5 : recv_list  \
                }
     while True:
-        data, addr = c_socket.recv_data()  ## address도 받아야함
+        data, addr = c_socket.recv_data() 
         if data != 0:
             pass
+
+        # 주석 필요
         mode, msg = utils.unpack_data(data.decode())
         
         mode2cmd[mode](msg)
