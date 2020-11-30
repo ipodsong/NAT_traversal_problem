@@ -123,7 +123,7 @@ def server():
     tcheck.start()
     
     ## start receive data thread
-    th_recv_data = threading.Thread(target=recv_data, args=(server_socket))
+    th_recv_data = threading.Thread(target=recv_data, args=(server_socket,))
     th_recv_data.start()
    
     
