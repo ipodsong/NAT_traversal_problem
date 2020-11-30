@@ -73,11 +73,12 @@ def splitcmd(cmd, address):
 
 def client(serverIP, serverPort, clientID):
     # client init
-    global client_table = {} ## dataform : {another clientID : another client_address} ## res_list에서 바꾸면됨
+    global client_table
+    client_table = {} ## dataform : {another clientID : another client_address} 
     
     cmd2mode = {'@show_list':requst_list, \
                  '@chat':send_msg, \
-                 '@exit':send_exit
+                 '@exit':send_exit \
                 }
     
     server_address = (serverIP, serverPort)
