@@ -81,10 +81,10 @@ def recv_data(s_socket):
     # 4 : recv exit
     # 5 : recv res list
     # response mode
-    mode2cmd = { 0 : saveCID,    \ # save Client_ID
-                 1 : reslist,    \ # send all Client list
-                 3 : reset_time, \ # reset timer
-                 4 : rm_timer    \ # remove Client info
+    mode2cmd = { 0 : saveCID,    \
+                 1 : reslist,    \
+                 3 : reset_time, \
+                 4 : rm_timer    \
                }
     
     while True:
@@ -113,7 +113,7 @@ def server():
     
     ## set variables
     client_table = {} ### dataform : {client_ID : [client_address, time]}
-    table_lock = threading.lock(); termserver = 0
+    table_lock = threading.Lock(); termserver = 0
      
     ## create socket    
     server_socket = ctrl_socket.ctrl_socket(('', serverPort))
