@@ -8,7 +8,7 @@ import ctrl_socket
 import utils
 
 # global variables
-serverIP = '10.0.0.3'
+serverIP = '127.0.0.1'
 serverPort = 10080
 clientPort = 10081
 
@@ -44,9 +44,9 @@ def recv_data(c_socket):
                  5 : print_list  \
                }
     while True:
-        data, addr = c_socket.recv_data() 
-        if data != 0:
-            pass
+        data, addr = c_socket.return_data() 
+        if len(data) == 0:
+            continue
 
         # unpack data to mode and message
         mode, msg = utils.unpack_data(data.decode())
@@ -89,7 +89,19 @@ def send_msg(socket, address, cid, msg):
 def send_exit(socket, address, cid, msg):
     data = utils.make_data(4, cid)   
     socket.send_data(address, data)    
-###### send function ######  
+###### send function ######
+
+# split commend to mode and data    
+def splitcmd(cmd, address):
+    global client_table
+    # cmd : '@commend' or '@chat [otherclient] [message]'
+    splited = (cmd+' ').split(' ')
+    mode = splited[0]; CID = splited[1]; msg = splited[-2]
+        
+    if CID in client_table:
+        address = client_table[CID]
+        
+    return mode, address, msg
 
 def client(serverIP, serverPort, clientID):
     # client init
@@ -114,7 +126,6 @@ def client(serverIP, serverPort, clientID):
         print("Make socket failed")
         exit(0)
 
-
     # data 받는 thread 생성
     th_recv_data = threading.Thread(target=recv_data, args=(client_socket, ))
     th_recv_data.start()
@@ -138,7 +149,7 @@ def client(serverIP, serverPort, clientID):
     while True:
         cmd = input("shell >> ")
         # 입력받은 command parsing
-        mode, address, msg = utils.splitcmd(cmd, server_address)
+        mode, address, msg = splitcmd(cmd, server_address)
         
         # command 예외처리
         if mode not in cmd2mode:

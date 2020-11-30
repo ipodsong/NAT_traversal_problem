@@ -38,7 +38,7 @@ def pack_res_list(data):
     table = ''
     for key in data:
         ## add 'CID:{CIDi}\r\nADDR:{ADDRi}\r\n
-        table = table + 'CID:{CID}\r\nADDR:{ADDR}\r\n'.format(CID=data[0], ADDR=data[1])
+        table = table + 'CID:{CID}\r\nADDR:{ADDR}\r\n'.format(CID=key[0], ADDR=key[1])
         
     return table
 
@@ -150,15 +150,3 @@ def unpack_data(data):
     
     
     return int(mode), unpack
-
-# split commend to mode and data    
-def splitcmd(cmd, address):
-    global client_table
-    # cmd : '@commend' or '@chat [otherclient] [message]'
-    splited = (cmd+' ').split(' ')
-    mode = splited[0]; CID = splited[1]; msg = splited[-2]
-        
-    if CID in client_table:
-        address = client_table[CID]
-        
-    return mode, address, msg

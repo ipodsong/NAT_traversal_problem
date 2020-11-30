@@ -7,7 +7,6 @@ import threading
 import ctrl_socket
 import utils
 
-
 # global variables
 serverPort = 10080
 
@@ -51,7 +50,7 @@ def reslist(s_socket, address, CID):
         table.append([key,client_table[key][0]])  ##append [key, address]
     table_lock.release()
     
-    data = utils. make_data(5, table)
+    data = utils.make_data(5, table)
     s_socket.send_data(address, data)
 
 # reset timer for Client_ID    
@@ -88,19 +87,17 @@ def recv_data(s_socket):
                }
     
     while True:
-        data = s_socket.recv_data()  ## 아마도 이 부분 수정해야할지도
+        data, addr = s_socket.return_data()
         
         # if server is terminated
         if termserver:
             return        
-        
         # if data is none
-        if data == 0:
+        if len(data) == 0:
             continue
-        data, addr = data
+
         # unpack data
-        mode, unpacked = utils.unpackdata(data.decode())
-        
+        mode, unpacked = utils.unpack_data(data.decode())
         # response
         mode2cmd[mode](s_socket, addr, unpacked)
         
