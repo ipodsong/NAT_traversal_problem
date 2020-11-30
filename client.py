@@ -2,6 +2,7 @@ import sys
 ### library ###
 import socket
 import threading
+import time
 ### user library ###
 import ctrl_socket
 import utils
@@ -20,22 +21,24 @@ clientPort = 10081
 # 4 : send exit
 # 5 : send res list
 
-
+# reveive message from other client
 def recv_chat(msg):
     # 채팅 메세지 console에 표시
     # ex) From client [msg]
     print('from ', msg[0], '[{}]'.format(msg[1]))
     
+    
+# receive all clinet list from server
 def recv_list(msg):
-    # 주석 필요
     global client_table
+    # reset client info table
     client_table = {}
     for key in msg:
         print(key)
-        # 주석 필요
+        # add client info to client_table
         client_table[key[0]] = key[1]
     
-    
+# receive data    
 def recv_data(c_socket):
     # mode
     # 2 : recv chat
@@ -48,27 +51,32 @@ def recv_data(c_socket):
         if data != 0:
             pass
 
-        # 주석 필요
+        # unpack data to mode and message
         mode, msg = utils.unpack_data(data.decode())
         
         mode2cmd[mode](msg)
 
         
-### send func ###        
+### send func ###      
+# request all client list to server
 def request_list(socket, address, cid, msg):
     data = utils.make_data(1, cid)  
     socket.send_data(address, data)
 
+# send message to other client
 def send_msg(socket, address, cid, msg):
     data = utils.make_data(2, [cid, msg])  
     socket.send_data(address, data)
 
+# send exit message to server    
 def send_exit(socket, address, cid, msg):
     data = utils.make_data(4, cid)   
     socket.send_data(address, data)    
     
+# split commend to mode and data    
 def splitcmd(cmd, address):
     global client_table
+    # cmd : '@commend' or '@chat [otherclient] [message]'
     splited = (cmd+' ').split(' ')
     mode = splited[0]; CID = splited[1]; msg = splited[-2]
         
@@ -80,7 +88,7 @@ def splitcmd(cmd, address):
 def client(serverIP, serverPort, clientID):
     # client init
     global client_table
-    client_table = {} ## dataform : {another clientID : another client_address} 
+    client_table = {} ## client_table dataform : { clientID : client_address} 
     
     cmd2mode = {'@show_list':requst_list, \
                  '@chat':send_msg, \
