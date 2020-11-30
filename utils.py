@@ -34,7 +34,7 @@ sendmode = { 0 : pack_CID, \
              2 : pack_chat, \
              3 : pack_exit, \
              4 : pack_keep_alive, \
-             5 : pack_res_list
+             5 : pack_res_list \
             }
 def make_data(mode, data):
     # mode
@@ -102,7 +102,7 @@ recvmode = { '0' : unpack_CID, \
              '2' : unpack_chat, \
              '3' : unpack_exit, \
              '4' : unpack_keep_alive, \
-             '5' : unpack_res_list
+             '5' : unpack_res_list \
             }      
 def unpack_data(data):
     # mode
