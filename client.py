@@ -20,12 +20,35 @@ clientPort = 10081
 # 4 : send exit
 # 5 : send res list
 
+### recv func ###
+def recv_chat(msg):
+    print('from ', msg[0], '[{}]'.format(msg[1]))
+    
+def recv_list(msg):
+    global client_table
+    client_table = {}
+    for key in msg:
+        print(key)
+        client_table[key[0]] = key[1]
+    
+    
 def recv_data(c_socket):
+    # mode
+    # 2 : recv chat
+    # 5 : recv res list
+    mode2cmd = { 2 : recv_chat, \
+                 5 : recv_list  \
+               }
     while True:
         data, addr = c_socket.recv_data()  ## address도 받아야함
         if data != 0:
             pass
+        mode, msg = utils.unpack_data(data.decode())
+        
+        mode2cmd[mode](msg)
 
+        
+### send func ###        
 def request_list(socket, address, cid, msg):
     data = utils.make_data(1, cid)  
     socket.send_data(address, data)
