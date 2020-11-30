@@ -1,26 +1,32 @@
 # parsing
 
 ### pack data ###
+# pack client_ID
 def pack_CID(data):
     ## data : client ID
     return 'CID:{}\r\n'.format(data)
 
+# pack request list from client to server
 def pack_req_list(data):
     ## data : client ID
     return 'CID:{}\r\n'.format(data)
 
+# pack send chat
 def pack_chat(data):
     ## data : [client ID, chat contents]
     return 'CID:{}\r\nCHAT:{}\r\n'.format(data[0], data[1])
 
+# pack send exit
 def pack_exit(data):
     ## data : client ID
     return 'CID:{}\r\n'.format(data)
 
+# pack send keep alive
 def pack_keep_alive(data):
     ## data : client ID
     return 'CID:{}\r\n'.format(data)
 
+# pack send list from server to client
 def pack_res_list(data):
     ## data : [[CID1, ADDR1], [CID2, ADDR2], [CID3, ADDR3], ... ]
     table = ''
@@ -29,6 +35,7 @@ def pack_res_list(data):
         
     return table
 
+# dic for send mode
 sendmode = { 0 : pack_CID, \
              1 : pack_req_list, \
              2 : pack_chat, \
@@ -36,6 +43,7 @@ sendmode = { 0 : pack_CID, \
              4 : pack_keep_alive, \
              5 : pack_res_list \
             }
+# pack data
 def make_data(mode, data):
     # mode
     # 0 : send CID
@@ -53,10 +61,12 @@ def make_data(mode, data):
 
 
 ### unpack data ###
+# remove colon
 def rmcol(data):
     # remove colon
     return data.split(':')[1]
 
+# remove \r\n
 def rmrn(data):
     return data.split('\r\n')
 
