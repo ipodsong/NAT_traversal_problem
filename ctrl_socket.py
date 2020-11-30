@@ -23,7 +23,6 @@ class ctrl_socket:
         self.exit = 1
         self.recv_Socket.close()
         self.th_recv_data.join()
-        self.th_return_data.join()
 
     def recv_data(self):
         # data 받고 저장
@@ -34,12 +33,12 @@ class ctrl_socket:
 
             # 데이터 받음
             recver, addr = self.recv_Socket.accept()
-            recv_data = recver.recv(400)
+            local_data = recver.recv(400)
 
-            if len(recv_data) != 0:
+            if len(local_data) != 0:
                 with self.lock:
                     self.exist_new_data = 1
-                    self.data = recv_data
+                    self.data = local_data
                     self.addr = addr
 
 
