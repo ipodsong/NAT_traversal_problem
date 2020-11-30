@@ -5,6 +5,7 @@ class ctrl_socket:
     def __init__(self, address):
         # Variables
         self.data = ''
+        self.address = ''
         self.exit = 0
         self.exist_new_data = 0
         self.lock = threading.Lock()
@@ -39,12 +40,13 @@ class ctrl_socket:
                 with self.lock:
                     self.exist_new_data = 1
                     self.data = recv_data
+                    self.addr = addr
 
 
     def return_data(self):
         with self.lock:
             if self.exist_new_data == 1:
-                return self.data
+                return self.data, self.addr
             else:
                 return 0
 
