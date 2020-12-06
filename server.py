@@ -10,7 +10,17 @@ import utils
 # global variables
 serverPort = 10080
 
-def check_timeout():
+# send created or removed Client_ID to the other Client    
+def send_CID(s_socket, mode, CID):
+    # mode
+    # 0 : created
+    # 1 : removed
+    global client_table
+    data = utils.make_data(mode, CID)
+    for key in client_table:
+        s_socket.send_data(client_table[key][0], data)   # client_table[key] : [adress, timer]
+ 
+def check_timeout(s_socket):
     global table_lock, client_table, termserver
     while True:
         del_key = {}
@@ -24,6 +34,8 @@ def check_timeout():
         for key in del_key:
             client_table.pop(key)           ## delete key
             print(key, 'is disappeared')  ## client connection is dead by 30s timeout
+            # send removed CID to the other client
+            send_CID(s_socket, 1, key)
             
         table_lock.release()
         ## time sleep 1s
@@ -37,21 +49,13 @@ def saveCID(s_socket, address, CID):
     global table_lock, client_table
     table_lock.acquire()
     client_table[CID] = [address, 0]  ## dic[key = client_ID] = [address, time]
+    # send created CID to the other Client
+    send_CID(s_socket, 0, CID)
     table_lock.release()
     print(CID, address)
 
-# send all client list to client
-def reslist(s_socket, address, CID):
-    global table_lock, client_table
-    ## make table to send all client list
-    table = []
-    table_lock.acquire()
-    for key in client_table:
-        table.append([key,client_table[key][0]])  ##append [key, address]
-    table_lock.release()
-    
-    data = utils.make_data(5, table)
-    s_socket.send_data(address, data)
+        
+        
 
 # reset timer for Client_ID    
 def reset_time(s_socket, address, CID):
@@ -66,7 +70,11 @@ def rm_timer(s_socket, address, CID):
     table_lock.acquire()
     if CID in client_table:
         client_table.pop(CID)
+        # send created CID to the other client
+        send_CID(s_socket, 0, CID)
+        
     table_lock.release()
+    
     print(CID, 'is unregistered')
 
 # reveive data from client    
@@ -74,14 +82,12 @@ def recv_data(s_socket):
     global termserver
     # mode
     # 0 : recv CID
-    # 1 : recv req list
+    # 1 : recv rm CID
     # 2 : recv chat
     # 3 : recv keep alive
     # 4 : recv exit
-    # 5 : recv res list
     # response mode
     mode2cmd = { 0 : saveCID,    \
-                 1 : reslist,    \
                  3 : reset_time, \
                  4 : rm_timer    \
                }
@@ -116,7 +122,7 @@ def server():
     server_socket = ctrl_socket.ctrl_socket(('', serverPort), 'server')
     
     ## start check_timeout thread
-    tcheck = threading.Thread(target=check_timeout)
+    tcheck = threading.Thread(target=check_timeout, args=(server_socket,))
     tcheck.start()
     
     ## start receive data thread
