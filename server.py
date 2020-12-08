@@ -10,16 +10,7 @@ import utils
 # global variables
 serverPort = 10080
 
-# send created or removed Client_ID to the other Client    
-def send_CID(s_socket, mode, CID):
-    # mode
-    # 0 : created
-    # 1 : removed
-    global client_table
-    data = utils.make_data(mode, CID)
-    for key in client_table:
-        s_socket.send_data(client_table[key][0], data)   # client_table[key] : [adress, timer]
- 
+# check timeout for each client 
 def check_timeout(s_socket):
     global table_lock, client_table, termserver
     while True:
@@ -32,10 +23,10 @@ def check_timeout(s_socket):
                 del_key[key] = 1
         ## delete key 
         for key in del_key:
-            client_table.pop(key)           ## delete key
+            Addr = client_table.pop(key)           ## delete key
             print(key, 'is disappeared')  ## client connection is dead by 30s timeout
             # send removed CID to the other client
-            send_CID(s_socket, 1, key)
+            send_CID(s_socket, 1, [key, Addr])
             
         table_lock.release()
         ## time sleep 1s
@@ -44,13 +35,35 @@ def check_timeout(s_socket):
         if termserver:
             return
 
+# send created or removed Client_ID to the other Client    
+def send_CID(s_socket, mode, msg):
+    # mode
+    # 0 : created
+    # 1 : removed
+    # msg = [CID, Address]
+    global client_table
+    data = utils.make_data(mode, msg)
+    for key in client_table:
+        s_socket.send_data(client_table[key][0], data)   # client_table[key] : [adress, timer]
+
+# send all Client_ID list to the new Client        
+def send_list(s_socket, CID, address):
+    global client_table
+    for key in client_table:
+        if key == CID:
+            continue
+        data = utils.make_data(0, [key, client_table[key][0]])
+        s_socket.send_data(address, data)
+    
+    
 # save received Client_ID
 def saveCID(s_socket, address, CID):
     global table_lock, client_table
     table_lock.acquire()
     client_table[CID] = [address, 0]  ## dic[key = client_ID] = [address, time]
     # send created CID to the other Client
-    send_CID(s_socket, 0, CID)
+    send_CID(s_socket, 0, [CID, address])
+    send_list(s_socket, CID, address)
     table_lock.release()
     print(CID, address)
 
@@ -69,9 +82,9 @@ def rm_timer(s_socket, address, CID):
     global table_lock, client_table
     table_lock.acquire()
     if CID in client_table:
-        client_table.pop(CID)
+        addr = client_table.pop(CID)
         # send created CID to the other client
-        send_CID(s_socket, 0, CID)
+        send_CID(s_socket, 1, [CID, addr])
         
     table_lock.release()
     
