@@ -16,11 +16,10 @@ clientPort = 10081
 
 # mode
 # 0 : send CID
-# 1 : request list
+# 1 : send rm CID
 # 2 : send chat
 # 3 : send keep alive
 # 4 : send exit
-# 5 : send res list
 
 ###### thread 함수 ######
 # send keep alive to server
@@ -43,10 +42,12 @@ def send_alive(c_socket, server_address):
 def recv_data(c_socket):
     print("recv_data_init")
     # mode
+    # 0 : recv add CID
+    # 1 : recv rm CID
     # 2 : recv chat
-    # 5 : recv res list
-    mode2cmd = { 2 : print_chat, \
-                 5 : print_list  \
+    mode2cmd = { 0 : add_CID, \
+                 1 : rm_CID, \
+                 2 : print_chat \
                }
     while True:
         if exit_flag == 1:
@@ -62,6 +63,23 @@ def recv_data(c_socket):
     print("recv_data thread terminated")
 ###### thread 함수 ######
 
+###### client_table ######
+# add CID in CID table
+def add_CID(msg):
+    global client_table
+    CID, Addr = msg
+    
+    if CID not in client_table:
+        client_table[CID] = Addr
+        
+# remove CID in CID table    
+def rm_CID(msg):
+    global client_table
+    CID, _ = msg
+    if CID in client_table:
+        client_table.pop(CID)
+###### client_table ######
+
 ###### print 함수 ######
 # reveive message from other client
 def print_chat(msg):
@@ -71,26 +89,25 @@ def print_chat(msg):
     
     
 # receive all clinet list from server
-def print_list(msg):
+def print_list(socket, address, cid, msg):
     global client_table
     # reset client info table
-    client_table = {}
-    for key in msg:
-        print(key)
-        # add client info to client_table
-        addr = key[1].replace("(", "")
-        addr = addr.replace(")", "")
-        addr = addr.replace("'", "")
-        addr = addr.split(", ")
-        client_table[key[0]] = (addr[0], int(addr[1]))
+    for key in client_table:
+        print(key, client_table[key])
+        
+        
+#    client_table = {}
+#    for key in msg:
+#        print(key)
+#        # add client info to client_table
+#        addr = key[1].replace("(", "")
+#        addr = addr.replace(")", "")
+#        addr = addr.replace("'", "")
+#        addr = addr.split(", ")
+#        client_table[key[0]] = (addr[0], int(addr[1]))
 ###### print 함수 ######
         
 ###### send function ######      
-# request all client list to server
-def request_list(socket, address, cid, msg):
-    data = utils.make_data(1, cid)  
-    socket.send_data(address, data)
-
 # send message to other client
 def send_msg(socket, address, cid, msg):
     data = utils.make_data(2, [cid, msg])
@@ -122,7 +139,7 @@ def client(serverIP, serverPort, clientID):
     client_table = {} ## client_table dataform : { clientID : client_address} 
     
     # 함수 dic
-    cmd2mode = {'@show_list':request_list, \
+    cmd2mode = {'@show_list':print_list, \
                  '@chat':send_msg, \
                  '@exit':send_exit \
                 }
@@ -144,7 +161,7 @@ def client(serverIP, serverPort, clientID):
     # 서버에 CID 전송
     try:
         print("Send CID to server...")
-        data = utils.make_data(0, clientID)
+        data = utils.make_data(0, [clientID, server_address])
         client_socket.send_data(server_address, data)
         print("Send CID to server completed")
     except:
