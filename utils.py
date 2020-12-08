@@ -3,15 +3,15 @@
 ### pack data ###
 # pack client_ID
 def pack_CID(data):
-    ## data : client_ID
-    ## return : 'CID:{CID}\r\n'
-    return 'CID:{}\r\n'.format(data)
+    ## data : [client_ID, Addr]
+    ## return : 'CID:{CID}\r\nAddress:{Addr}\r\n'
+    return 'CID:{}\r\nAddress:{}\r\n'.format(data[0],data[1])
 
 # pack remove CID to client
 def pack_rm_CID(data):
-    ## data : client_ID
-    ## return : 'CID:{CID}\r\n'
-    return 'CID:{}\r\n'.format(data)
+    ## data : [client_ID, Addr]
+    ## return : 'CID:{CID}\r\nAddress:{Addr}\r\n'
+    return 'CID:{}\r\nAddress:{}\r\n'.format(data[0],data[1])
 
 # pack send chat
 def pack_chat(data):
@@ -69,15 +69,17 @@ def rmrn(data):
 
 # unpack recv client_ID
 def unpack_CID(data):
-    ## data : 'CID:{CID}'
-    ## return CID
-    return rmcol(data)
+    ## data : 'CID:{CID}\r\nAddress:{Addr}'
+    ## return CID, Addr
+    CID, Addr = rmrn(data)
+    return [rmcol(CID), rmcol(Addr)]
 
 # unpack remove CID from server
 def unpack_rm_CID(data):
-    ## data : 'CID:{CID}'
-    ## return CID
-    return rmcol(data)
+    ## data : 'CID:{CID}\r\nAddress:{Addr}'
+    ## return CID, Addr
+    CID, Addr = rmrn(data)
+    return [rmcol(CID), rmcol(Addr)]
 
 # unpack sent chat from client
 def unpack_chat(data):
