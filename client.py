@@ -155,7 +155,7 @@ def client(serverIP, serverPort, clientID):
     # data 받는 thread 생성
     th_recv_data = threading.Thread(target=recv_data, args=(client_socket, ))
     th_recv_data.start()
-    time.sleep(0.2)
+    time.sleep(0.1)
     # 서버에 CID 전송
     try:
     #    print("Send CID to server...")
