@@ -10,7 +10,7 @@ import ctrl_socket
 import utils
 
 # global variables
-serverIP = '127.0.0.1'
+serverIP = '10.0.0.3'
 serverPort = 10080
 clientPort = 10081
 
@@ -40,7 +40,7 @@ def send_alive(c_socket, server_address):
 
 # receive data    
 def recv_data(c_socket):
-    print("recv_data_init")
+    #print("recv_data_init")
     # mode
     # 0 : recv add CID
     # 1 : recv rm CID
@@ -55,6 +55,7 @@ def recv_data(c_socket):
         data, addr = c_socket.return_data() 
         if len(data) == 0:
             continue
+        time.sleep(0.01)
         # unpack data to mode and message
         mode, msg = utils.unpack_data(data.decode())
         
@@ -85,31 +86,27 @@ def rm_CID(msg):
 def print_chat(msg):
     # 채팅 메세지 console에 표시
     # ex) From client [msg]
-    print('from', msg[0], '[{}]'.format(msg[1]))
+    chat = ''.join(msg[1])
+    print('from', msg[0], '[{}]'.format(chat))
     
     
 # receive all clinet list from server
 def print_list(socket, address, cid, msg):
     global client_table
-    # reset client info table
+
     for key in client_table:
-        print(key, client_table[key])
+        print(key, client_table[key][0],':', client_table[key][1])
         
         
-#    client_table = {}
-#    for key in msg:
-#        print(key)
-#        # add client info to client_table
-#        addr = key[1].replace("(", "")
-#        addr = addr.replace(")", "")
-#        addr = addr.replace("'", "")
-#        addr = addr.split(", ")
-#        client_table[key[0]] = (addr[0], int(addr[1]))
 ###### print 함수 ######
-        
+
+
 ###### send function ######      
 # send message to other client
 def send_msg(socket, address, cid, msg):
+    #print('addr',address[0],address[1])
+    msg = ''.join(msg)
+    #print('msg', msg)
     data = utils.make_data(2, [cid, msg])
     socket.send_data(address, data)
 
@@ -128,12 +125,13 @@ def splitcmd(cmd, address):
     msg = ' '.join(msg)
     if CID in client_table:
         address = client_table[CID]
-        
+    if len(CID.split('.')) == 4:
+        address = (CID, clientPort)
     return mode, address, msg
 
 def client(serverIP, serverPort, clientID):
     # client init
-    print("Init client")
+    # print("Init client")
     global client_table, exit_flag
     exit_flag = 0
     client_table = {} ## client_table dataform : { clientID : client_address} 
@@ -146,10 +144,10 @@ def client(serverIP, serverPort, clientID):
     
     #소켓 생성
     try:
-        print("Make socket...")
+    #    print("Make socket...")
         server_address = (serverIP, serverPort)
         client_socket = ctrl_socket.ctrl_socket(('', clientPort), 'client')
-        print("Make socket completed")
+    #    print("Make socket completed")
     except:
         print("Make socket failed")
         exit(0)
@@ -157,25 +155,25 @@ def client(serverIP, serverPort, clientID):
     # data 받는 thread 생성
     th_recv_data = threading.Thread(target=recv_data, args=(client_socket, ))
     th_recv_data.start()
-
+    time.sleep(0.2)
     # 서버에 CID 전송
     try:
-        print("Send CID to server...")
+    #    print("Send CID to server...")
         data = utils.make_data(0, [clientID, server_address])
         client_socket.send_data(server_address, data)
-        print("Send CID to server completed")
+    #    print("Send CID to server completed")
     except:
         print("Send CID to server failed")
         exit(0)
 
     # sending alive thread 생성
-    th_send_alive = threading.Thread(target=send_alive, args=(client_socket, server_address))
+    th_send_alive = threading.Thread(target=send_alive, args=(client_socket, server_address),)
     th_send_alive.start()
 
     print("Init client completed")
     print("Start Shell...")
     while True:
-        cmd = input("")
+        cmd = input(">> ")
         sys.stdout.flush()
         # 입력받은 command parsing
         mode, address, msg = splitcmd(cmd, server_address)

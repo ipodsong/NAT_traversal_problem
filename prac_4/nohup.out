@@ -558,3 +558,27 @@ switch connected 2
 switch connected 1
 switch connected 16
 switch connected 2
+loading app ryu-nat/ryu-nat.py
+loading app ryu.controller.dpset
+loading app ryu.controller.ofp_handler
+instantiating app ryu.controller.dpset of DPSet
+instantiating app ryu.controller.ofp_handler of OFPHandler
+instantiating app ryu-nat/ryu-nat.py of NAT
+switch connected 16
+switch connected 1
+switch connected 2
+switch connected 16
+switch connected 1
+switch connected 2
+loading app ryu-nat/ryu-nat.py
+loading app ryu.controller.dpset
+loading app ryu.controller.ofp_handler
+instantiating app ryu.controller.dpset of DPSet
+instantiating app ryu.controller.ofp_handler of OFPHandler
+instantiating app ryu-nat/ryu-nat.py of NAT
+switch connected 1
+switch connected 16
+switch connected 2
+switch connected 1
+switch connected 16
+switch connected 2

@@ -51,7 +51,7 @@ class ctrl_socket:
                 return '', ''
 
     def send_data(self, address, data):
-        # send 위한 socket 생성 
+        # send 위한 socket 생성
         self.recv_Socket.sendto(data.encode(), address)
         
         

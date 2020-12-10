@@ -49,23 +49,31 @@ def send_CID(s_socket, mode, msg):
 # send all Client_ID list to the new Client        
 def send_list(s_socket, CID, address):
     global client_table
+    #print(client_table)
     for key in client_table:
-        if key == CID:
-            continue
         data = utils.make_data(0, [key, client_table[key][0]])
+        s_socket.send_data(address, data)
+
+    for key in client_table:
+        #print(key, client_table[key][0])
+        data = utils.make_data(0, [key, client_table[key][0]])
+        #print(address)
         s_socket.send_data(address, data)
     
     
 # save received Client_ID
 def saveCID(s_socket, address, CID):
     global table_lock, client_table
+    
+    CID, _ = CID
     table_lock.acquire()
     client_table[CID] = [address, 0]  ## dic[key = client_ID] = [address, time]
     # send created CID to the other Client
+    print(CID, address)
     send_CID(s_socket, 0, [CID, address])
     send_list(s_socket, CID, address)
     table_lock.release()
-    print(CID, address)
+    
 
         
         
@@ -106,6 +114,7 @@ def recv_data(s_socket):
                }
     
     while True:
+        sleep(0.01)
         data, addr = s_socket.return_data()
         
         # if server is terminated

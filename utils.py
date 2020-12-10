@@ -50,7 +50,7 @@ def make_data(mode, data):
     # 4 : send exit
     
     # send data format
-    data = 'mode:{mode}\r\n\r\n ' \
+    data = 'mode:{mode}\r\n\r\n' \
            '{data}\r\n' \
            .format(mode=mode, data=sendmode[mode](data))
 
@@ -67,19 +67,27 @@ def rmcol(data):
 def rmrn(data):
     return data.split('\r\n')
 
+# change string to Address
+def str2Addr(Addr):
+    addr = Addr.replace("(","")
+    addr = addr.replace(")","")
+    addr = addr.replace("'","")
+    addr = addr.split(", ")
+    return (addr[0], int(addr[1]))
+
 # unpack recv client_ID
 def unpack_CID(data):
     ## data : 'CID:{CID}\r\nAddress:{Addr}'
     ## return CID, Addr
     CID, Addr = rmrn(data)
-    return [rmcol(CID), rmcol(Addr)]
+    return [rmcol(CID), str2Addr(rmcol(Addr))]
 
 # unpack remove CID from server
 def unpack_rm_CID(data):
     ## data : 'CID:{CID}\r\nAddress:{Addr}'
     ## return CID, Addr
     CID, Addr = rmrn(data)
-    return [rmcol(CID), rmcol(Addr)]
+    return [rmcol(CID), str2Addr(rmcol(Addr))]
 
 # unpack sent chat from client
 def unpack_chat(data):
