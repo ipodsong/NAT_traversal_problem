@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 class ctrl_socket:
     def __init__(self, address, opt):
@@ -33,6 +34,7 @@ class ctrl_socket:
 
             # 데이터 받음
             local_data, addr = self.recv_Socket.recvfrom(1024)
+            time.sleep(0.01)
             if len(local_data) != 0:
                 #print("recv : ", local_data)
                 #print("addr : ", addr)
