@@ -105,6 +105,9 @@ def print_list(socket, address, cid, msg):
 # send message to other client
 def send_msg(socket, address, cid, msg):
     #print('addr',address[0],address[1])
+    global client_table
+    if cid not in client_table:
+        return
     msg = ''.join(msg)
     #print('msg', msg)
     data = utils.make_data(2, [cid, msg])
@@ -125,8 +128,7 @@ def splitcmd(cmd, address):
     msg = ' '.join(msg)
     if CID in client_table:
         address = client_table[CID]
-    if len(CID.split('.')) == 4:
-        address = (CID, clientPort)
+    
     return mode, address, msg
 
 def client(serverIP, serverPort, clientID):
